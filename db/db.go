@@ -63,7 +63,7 @@ func NewTx(db *sql.DB, timeout time.Duration) (tx *sql.Tx, err error)  {
 	select {
 	case tx = <-ch:
 		return tx, nil
-	case <-time.After(time.Duration(timeout) * time.Second):
+	case <-time.After(timeout):
 		return nil, ErrNewTxTimedOut
 	}
 
