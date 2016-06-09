@@ -49,6 +49,18 @@ func NewData() Data {
 
 // ConnectPostgres used to connect to any Postgres database
 func ConnectPostgres(d Data) (db *sql.DB, err error) {
+	// connect_timeout
+	//
+	// https://www.postgresql.org/docs/9.6/static/libpq-connect.html#LIBPQ-CONNECT-CONNECT-TIMEOUT
+	// Maximum wait for connection, in seconds (write as a decimal integer string). Zero or not
+	// specified means wait indefinitely. It is not recommended to use a timeout of less than 2
+	// seconds.
+	//
+	// statement_timeout
+	//
+	// https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#GUC-STATEMENT-TIMEOUT
+	// Abort any statement that takes more than the specified number of milliseconds, starting from
+	// the time the command arrives at the server from the client.
 	connParams := fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable host=%s connect_timeout=%d statement_timeout=%d",
 		d.Username,
@@ -56,7 +68,7 @@ func ConnectPostgres(d Data) (db *sql.DB, err error) {
 		d.DatabaseName,
 		d.Host,
 		int(d.ConnectTimeout.Seconds()),
-		int(d.StatementTimeout.Seconds()),
+		int(d.StatementTimeout.Seconds()*1000),
 	)
 
 	if db, err = sql.Open(PostgresDriver, connParams); err != nil {

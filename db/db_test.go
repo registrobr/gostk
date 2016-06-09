@@ -31,7 +31,7 @@ func TestConnectPostgres(t *testing.T) {
 			}(),
 			postgresDriver: "testdb",
 			openFunc: func(dsn string) (driver.Conn, error) {
-				connParams := "user=user password=passwd dbname=test sslmode=disable host=127.0.0.1 connect_timeout=3 statement_timeout=10"
+				connParams := "user=user password=passwd dbname=test sslmode=disable host=127.0.0.1 connect_timeout=3 statement_timeout=10000"
 				if dsn != connParams {
 					return nil, fmt.Errorf("invalid connection string")
 				}
