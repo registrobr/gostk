@@ -1,5 +1,11 @@
-// Package db handles new connections and new transactions with database adding an extra layer to
-// deal with timeouts and other connection problems during the operation.
+// Package db handles new connections and new transactions adding the ability to work with timeouts:
+//    Connect timeout: sets the maximum wait for creating a new connection
+//    Statement timeout: sets the maximum wait for queries completion
+//    New transaction timeout: sets the maximum wait for opening a new transaction
+//
+// This feature is useful when the servers must be kept up, even though your database servers are
+// not stable. So the database clients can respond their users with kindly error messages or look
+// for other database servers - fail fast is usually better than keep server resources busy.
 package db
 
 import (
@@ -12,24 +18,29 @@ import (
 // ErrNewTxTimedOut returned when takes too long to retrieve a transaction from the database server.
 var ErrNewTxTimedOut = errors.New("new transaction timed out")
 
-// PostgresDriver used to connect using a postgres driver. You should import it somewhere in your
-// code. By default "postgres" is used from github.com/lib/pq. We don't import directly here to
-// don't stick this library with only one type of Postgres driver, and to make it more flexible for
-// testing.
+// PostgresDriver holds the postgres driver name. You should import the driver somewhere in your
+// code. The default value for PostgresDriver was get from https://github.com/lib/pq. This driver
+// isn't directly imported here to don't stick this library with only one type of Postgres driver,
+// and to make it more flexible for testing.
 //
 //     import (
 //       _ "github.com/lib/pq"
 //     )
 var PostgresDriver = "postgres"
 
-// Data is all the data needed to create a new connection
+// Data is all the data needed to create a new connection with database. If you are looking for
+// default values see NewData() function that set defaults values to Data structure.
 type Data struct {
 	Username     string
 	Password     string
 	DatabaseName string
 	Host         string
 
-	ConnectTimeout   time.Duration
+	// ConnectTimeout is the timeout utilized to creating a new connection with database. It is not
+	// recommended to use a timeout of less than 2 seconds.
+	ConnectTimeout time.Duration
+	// StatementTimeout is the timeout utilized to invalidate queries that last more than the
+	// configured timeout.
 	StatementTimeout time.Duration
 
 	MaxIdleConnections int
@@ -47,7 +58,9 @@ func NewData() Data {
 	}
 }
 
-// ConnectPostgres used to connect to any Postgres database
+// ConnectPostgres connects to a postgres database using the values from d. In case of a successfully
+// connection it returns a sql.DB and a nil error. In case of problem it returns a nil sql.DB and an
+// error from sql.Open (standard library, see https://golang.org/pkg/database/sql/#Open)
 func ConnectPostgres(d Data) (db *sql.DB, err error) {
 	// connect_timeout
 	//
@@ -80,9 +93,17 @@ func ConnectPostgres(d Data) (db *sql.DB, err error) {
 	return
 }
 
-// NewTx starts a new database transaction adding an extra layer to deal with database timeouts
-// during the action.
+// NewTx starts a new database transaction with a timeout. Starting a new transaction is not
+// supposed to last too long, so a timeout of more than 3 seconds it's usually not necessary.
 func NewTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
+	// The channels has size of 1 (buffered) to avoid keeping an unnecessary goroutine blocked in
+	// memory. For example: a goroutine is spawn, and it returns via channel a new transaction or
+	// an error. After spawning a goroutine the program blocks in the select statement waiting
+	// until the first channel message. In case of a timeout message, the spawned goroutine will
+	// put a message in one of this two channels (ch and chErr) and simply returns (die), the
+	// program don't care about the messages, because it has already timed out. If the channels
+	// were not buffered the goroutine would be blocked trying to put a message into the channel
+	// until the program dies.
 	ch := make(chan *sql.Tx, 1)
 	chErr := make(chan error, 1)
 

@@ -8,7 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/erikstmartin/go-testdb"
+	"mars/log"
+
+	testdb "github.com/erikstmartin/go-testdb"
 	"github.com/registrobr/gostk/db"
 )
 
@@ -139,4 +141,47 @@ func TestNewTx(t *testing.T) {
 				i, scenario.description, scenario.expectedError, err)
 		}
 	}
+}
+
+func ExampleConnectPostgres() {
+	d := db.Data{
+		Username:           "user",
+		Password:           "passwd",
+		DatabaseName:       "dbname",
+		Host:               "localhost:5432",
+		ConnectTimeout:     3 * time.Second,
+		StatementTimeout:   10 * time.Second,
+		MaxIdleConnections: 16,
+		MaxOpenConnections: 32,
+	}
+
+	dbConn, err := db.ConnectPostgres(d)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return dbConn, nil
+}
+
+func ExampleNewTx() {
+	d := db.Data{
+		Username:           "user",
+		Password:           "passwd",
+		DatabaseName:       "dbname",
+		Host:               "localhost:5432",
+		ConnectTimeout:     3 * time.Second,
+		StatementTimeout:   10 * time.Second,
+		MaxIdleConnections: 16,
+		MaxOpenConnections: 32,
+	}
+
+	// get dbConn from a global variable or a local pool
+	dbConn, err := db.ConnectPostgres(d)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return db.NewTx(dbConn, 3*time.Second)
 }
