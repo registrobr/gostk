@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+// pathDeep defines the number of folders that are visible when logging a
+// message with the logging location.
+const pathDeep = 3
+
 const (
 	// LevelEmergency system is unusable.
 	LevelEmergency Level = 0
@@ -143,51 +147,51 @@ var NewLogger = func(id string) Logger {
 }
 
 func (l logger) Emerg(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Emerg, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Emerg
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Emergf(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Emerg, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Emerg
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 func (l logger) Alert(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Alert, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Alert
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Alertf(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Alert, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Alert
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 func (l logger) Crit(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Crit, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Crit
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Critf(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Crit, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Crit
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 // Error converts an Go error into an error message. The responsibility of
@@ -239,75 +243,75 @@ func (l logger) Error(e error) {
 }
 
 func (l logger) Errorf(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Err, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Err
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 func (l logger) Warning(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Warning, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Warning
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Warningf(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Warning, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Warning
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 func (l logger) Notice(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Notice, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Notice
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Noticef(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Notice, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Notice
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 func (l logger) Info(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Info, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Info
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Infof(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Info, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Info
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 func (l logger) Debug(m string) {
-	if remoteLogger == nil {
-		localLogWithSourceInfo(l.identifier, m)
-	} else {
-		logWithSourceInfo(remoteLogger.Debug, l.identifier, m)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Debug
 	}
+	logWithSourceInfo(f, l.identifier, m)
 }
 
 func (l logger) Debugf(m string, a ...interface{}) {
-	if remoteLogger == nil {
-		localLogWithSourceInfof(l.identifier, m, a...)
-	} else {
-		logWithSourceInfof(remoteLogger.Debug, l.identifier, m, a...)
+	var f logFunc
+	if remoteLogger != nil {
+		f = remoteLogger.Debug
 	}
+	logWithSourceInfof(f, l.identifier, m, a...)
 }
 
 // Emerg log an emergency message
@@ -406,40 +410,11 @@ func Debugf(m string, a ...interface{}) {
 	l.Debugf(m, a...)
 }
 
-func localLogWithSourceInfo(prefix, message string) {
+type logFunc func(string) error
+
+func logWithSourceInfo(f logFunc, prefix, message string) {
 	_, file, line, _ := runtime.Caller(2)
-	file = relevantPath(file, 3)
-	lines := strings.Split(message, "\n")
-
-	for _, item := range lines {
-		if item == "" {
-			continue
-		}
-
-		msg := fmt.Sprintf("%s%s:%d: %s", prefix, file, line, item)
-		localLogger.Println(msg)
-	}
-}
-
-func localLogWithSourceInfof(prefix, message string, a ...interface{}) {
-	_, file, line, _ := runtime.Caller(2)
-	file = relevantPath(file, 3)
-	message = fmt.Sprintf(message, a...)
-	lines := strings.Split(message, "\n")
-
-	for _, item := range lines {
-		if item == "" {
-			continue
-		}
-
-		msg := fmt.Sprintf("%s%s:%d: %s", prefix, file, line, item)
-		localLogger.Println(msg)
-	}
-}
-
-func logWithSourceInfo(f func(string) error, prefix, message string) {
-	_, file, line, _ := runtime.Caller(2)
-	file = relevantPath(file, 3)
+	file = relevantPath(file, pathDeep)
 	lines := strings.Split(message, "\n")
 
 	for _, item := range lines {
@@ -449,16 +424,19 @@ func logWithSourceInfo(f func(string) error, prefix, message string) {
 
 		msg := fmt.Sprintf("%s%s:%d: %s", prefix, file, line, item)
 
-		if err := f(msg); err != nil {
+		if f == nil {
+			localLogger.Println(msg)
+
+		} else if err := f(msg); err != nil {
 			localLogger.Println("Error writing to syslog. Details:", err)
 			localLogger.Println(msg)
 		}
 	}
 }
 
-func logWithSourceInfof(f func(string) error, prefix, message string, a ...interface{}) {
+func logWithSourceInfof(f logFunc, prefix, message string, a ...interface{}) {
 	_, file, line, _ := runtime.Caller(2)
-	file = relevantPath(file, 3)
+	file = relevantPath(file, pathDeep)
 	message = fmt.Sprintf(message, a...)
 	lines := strings.Split(message, "\n")
 
@@ -469,7 +447,10 @@ func logWithSourceInfof(f func(string) error, prefix, message string, a ...inter
 
 		msg := fmt.Sprintf("%s%s:%d: %s", prefix, file, line, item)
 
-		if err := f(msg); err != nil {
+		if f == nil {
+			localLogger.Println(msg)
+
+		} else if err := f(msg); err != nil {
 			localLogger.Println("Error writing to syslog. Details:", err)
 			localLogger.Println(msg)
 		}
