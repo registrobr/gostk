@@ -1,6 +1,6 @@
 // Package db handles new connections and transactions with timeouts.
 //
-// Some timeouts that can be defined:
+// Timeouts that can be defined:
 //    Connect timeout         - sets the maximum wait for creating a new connection
 //    Statement timeout       - sets the maximum wait for queries completion
 //    New transaction timeout - sets the maximum wait for opening a new transaction
