@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"mars/log"
-
 	testdb "github.com/erikstmartin/go-testdb"
 	"github.com/registrobr/gostk/db"
 )
@@ -54,6 +52,11 @@ func TestConnectPostgres(t *testing.T) {
 			expectedError:  fmt.Errorf(`sql: unknown driver "idontexist" (forgotten import?)`),
 		},
 	}
+
+	originalPostgresDriver := db.PostgresDriver
+	defer func() {
+		db.PostgresDriver = originalPostgresDriver
+	}()
 
 	for i, scenario := range scenarios {
 		testdb.SetOpenFunc(scenario.openFunc)
@@ -144,6 +147,8 @@ func TestNewTx(t *testing.T) {
 }
 
 func ExampleConnectPostgres() {
+	db.PostgresDriver = "testdb"
+
 	d := db.Data{
 		Username:           "user",
 		Password:           "passwd",
@@ -157,14 +162,19 @@ func ExampleConnectPostgres() {
 
 	dbConn, err := db.ConnectPostgres(d)
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		fmt.Println(err)
+		return
 	}
 
-	return dbConn, nil
+	fmt.Println(dbConn != nil)
+
+	// Output:
+	// true
 }
 
 func ExampleNewTx() {
+	db.PostgresDriver = "testdb"
+
 	d := db.Data{
 		Username:           "user",
 		Password:           "passwd",
@@ -179,9 +189,18 @@ func ExampleNewTx() {
 	// get dbConn from a global variable or a local pool
 	dbConn, err := db.ConnectPostgres(d)
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		fmt.Println(err)
+		return
 	}
 
-	return db.NewTx(dbConn, 3*time.Second)
+	tx, err := db.NewTx(dbConn, 3*time.Second)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(tx != nil)
+
+	// Output:
+	// true
 }
