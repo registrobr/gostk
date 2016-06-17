@@ -15,29 +15,38 @@ import (
 // message with the logging location.
 const pathDeep = 3
 
+// Syslog level message, defined in RFC 5424, section 6.2.1
 const (
-	// LevelEmergency system is unusable.
+	// LevelEmergency sets a high priority level of problem advising that system
+	// is unusable.
 	LevelEmergency Level = 0
 
-	// LevelAlert should be corrected immediately.
+	// LevelAlert sets a high priority level of problem advising to correct
+	// immediately.
 	LevelAlert Level = 1
 
-	// LevelCritical critical conditions.
+	// LevelCritical sets a medium priority level of problem indicating a failure
+	// in a primary system.
 	LevelCritical Level = 2
 
-	// LevelError error conditions.
+	// LevelError sets a medium priority level of problem indicating a non-urgent
+	// failure.
 	LevelError Level = 3
 
-	// LevelWarning may indicate that an error will occur if action is not taken.
+	// LevelWarning sets a low priority level indicating that an error will occur
+	// if action is not taken.
 	LevelWarning Level = 4
 
-	// LevelNotice events that are unusual, but not error conditions.
+	// LevelNotice sets a low priority level indicating events that are unusual,
+	// but not error conditions.
 	LevelNotice Level = 5
 
-	// LevelInfo normal operational messages that require no action.
+	// LevelInfo sets a very low priority level indicating normal operational
+	// messages that require no action.
 	LevelInfo Level = 6
 
-	// LevelDebug information useful to developers for debugging the application.
+	// LevelDebug sets a very low priority level indicating information useful to
+	// developers for debugging the application.
 	LevelDebug Level = 7
 )
 
