@@ -1,6 +1,10 @@
-package path
+package path_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/registrobr/gostk/path"
+)
 
 func TestRelevantPath(t *testing.T) {
 	scenarios := []struct {
@@ -36,7 +40,7 @@ func TestRelevantPath(t *testing.T) {
 	}
 
 	for i, scenario := range scenarios {
-		path := RelevantPath(scenario.path, scenario.n)
+		path := path.RelevantPath(scenario.path, scenario.n)
 		if scenario.expected != path {
 			t.Errorf("scenario %d, “%s”: mismatch results. Expecting: “%v”; found “%v”",
 				i, scenario.description, scenario.expected, path)
