@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestConnect(t *testing.T) {
+func TestDial(t *testing.T) {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatal(err)
@@ -25,25 +25,28 @@ func TestConnect(t *testing.T) {
 
 	scenarios := []struct {
 		description   string
-		name          string
-		hostAndPort   string
+		network       string
+		raddr         string
+		tag           string
 		expectedError error
 	}{
 		{
 			description: "it should connect to the remote syslog server correctly",
-			name:        "test",
-			hostAndPort: l.Addr().String(),
+			network:     "tcp",
+			raddr:       l.Addr().String(),
+			tag:         "test",
 		},
 		{
 			description:   "it should detect an error connecting to the remote syslog server",
-			name:          "test",
-			hostAndPort:   "localhost:0",
+			network:       "tcp",
+			raddr:         "localhost:0",
+			tag:           "test",
 			expectedError: fmt.Errorf("dial tcp 127.0.0.1:0: getsockopt: connection refused"),
 		},
 	}
 
 	for i, scenario := range scenarios {
-		err := Connect(scenario.name, scenario.hostAndPort)
+		err := Dial(scenario.network, scenario.raddr, scenario.tag)
 
 		if ((err == nil || scenario.expectedError == nil) && err != scenario.expectedError) ||
 			(err != nil && scenario.expectedError != nil && err.Error() != scenario.expectedError.Error()) {
@@ -51,12 +54,6 @@ func TestConnect(t *testing.T) {
 				i, scenario.description, scenario.expectedError, err)
 		}
 	}
-}
-
-func TestConnectLocal(t *testing.T) {
-	// TODO(rafaeljusto): Can't simulate a unix socket "/dev/log",
-	// "/var/run/syslog" or "/var/run/log" as defined by log/syslog/syslog_unix.go
-	// (unixSyslog). Not sure how we can test this.
 }
 
 func TestClose(t *testing.T) {

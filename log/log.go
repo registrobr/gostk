@@ -96,21 +96,16 @@ func init() {
 	localLogger = log.New(os.Stderr, "", log.LstdFlags)
 }
 
-// Connect initializes a connection with a remote syslog server using TCP
-// (minimize package loss). All messages sent to this syslog server will be
-// tagged with the name parameter.
-func Connect(name, hostAndPort string) (err error) {
-	remoteLogger, err = syslog.Dial("tcp", hostAndPort, syslog.LOG_INFO|syslog.LOG_LOCAL0, name)
+// Dial establishes a connection to a log daemon by connecting to
+// address raddr on the specified network.  Each write to the returned
+// writer sends a log message with the given facility, severity and
+// tag. If network is empty, Dial will connect to the local syslog server.
+func Dial(network, raddr, tag string) (err error) {
+	remoteLogger, err = syslog.Dial(network, raddr, syslog.LOG_INFO|syslog.LOG_LOCAL0, tag)
 	return
 }
 
-// ConnectLocal initializes a connection with a local syslog server.
-func ConnectLocal(name string) (err error) {
-	remoteLogger, err = syslog.New(syslog.LOG_INFO|syslog.LOG_LOCAL0, name)
-	return
-}
-
-// Close disconnects the connection from the syslog server.
+// Close closes a connection to the syslog daemon.
 func Close() error {
 	if remoteLogger == nil {
 		return nil
@@ -422,34 +417,24 @@ func Debugf(m string, a ...interface{}) {
 type logFunc func(string) error
 
 func logWithSourceInfo(f logFunc, prefix string, a ...interface{}) {
+	// identify the caller from 2 levels above, as this function is never called
+	// directly from the place that logged the message
 	_, file, line, _ := runtime.Caller(2)
 	file = relevantPath(file, pathDeep)
-	lines := strings.Split(fmt.Sprint(a...), "\n")
-
-	for _, item := range lines {
-		if item == "" {
-			continue
-		}
-
-		msg := fmt.Sprintf("%s%s:%d: %s", prefix, file, line, item)
-
-		if f == nil {
-			localLogger.Println(msg)
-
-		} else if err := f(msg); err != nil {
-			localLogger.Println("Error writing to syslog. Details:", err)
-			localLogger.Println(msg)
-		}
-	}
+	doLog(f, prefix, fmt.Sprint(a...), file, line)
 }
 
 func logWithSourceInfof(f logFunc, prefix, message string, a ...interface{}) {
+	// identify the caller from 2 levels above, as this function is never called
+	// directly from the place that logged the message
 	_, file, line, _ := runtime.Caller(2)
 	file = relevantPath(file, pathDeep)
-	message = fmt.Sprintf(message, a...)
-	lines := strings.Split(message, "\n")
+	doLog(f, prefix, fmt.Sprintf(message, a...), file, line)
+}
 
-	for _, item := range lines {
+func doLog(f logFunc, prefix, message, file string, line int) {
+	// support multiline log message, breaking it in many log entries
+	for _, item := range strings.Split(message, "\n") {
 		if item == "" {
 			continue
 		}
