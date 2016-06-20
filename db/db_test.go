@@ -15,15 +15,15 @@ import (
 func TestConnectPostgres(t *testing.T) {
 	scenarios := []struct {
 		description    string
-		data           db.Data
+		connParams     db.ConnParams
 		postgresDriver string
 		openFunc       func(dsn string) (driver.Conn, error)
 		expectedError  error
 	}{
 		{
 			description: "it should connect correctly to the database",
-			data: func() db.Data {
-				d := db.NewData()
+			connParams: func() db.ConnParams {
+				d := db.NewConnParams()
 				d.DatabaseName = "test"
 				d.Username = "user"
 				d.Password = "passwd"
@@ -41,8 +41,8 @@ func TestConnectPostgres(t *testing.T) {
 		},
 		{
 			description: "it should detect an unknown driver",
-			data: func() db.Data {
-				d := db.NewData()
+			connParams: func() db.ConnParams {
+				d := db.NewConnParams()
 				d.DatabaseName = "test"
 				d.Username = "user"
 				d.Password = "passwd"
@@ -61,7 +61,7 @@ func TestConnectPostgres(t *testing.T) {
 	for i, scenario := range scenarios {
 		testdb.SetOpenFunc(scenario.openFunc)
 		db.PostgresDriver = scenario.postgresDriver
-		db, err := db.ConnectPostgres(scenario.data)
+		db, err := db.ConnectPostgres(scenario.connParams)
 
 		if scenario.expectedError == nil && db == nil {
 			t.Errorf("scenario %d, “%s”: database not initialized",
@@ -149,7 +149,7 @@ func TestNewTx(t *testing.T) {
 func ExampleConnectPostgres() {
 	db.PostgresDriver = "testdb"
 
-	d := db.Data{
+	params := db.ConnParams{
 		Username:           "user",
 		Password:           "passwd",
 		DatabaseName:       "dbname",
@@ -160,7 +160,7 @@ func ExampleConnectPostgres() {
 		MaxOpenConnections: 32,
 	}
 
-	dbConn, err := db.ConnectPostgres(d)
+	dbConn, err := db.ConnectPostgres(params)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -175,7 +175,7 @@ func ExampleConnectPostgres() {
 func ExampleNewTx() {
 	db.PostgresDriver = "testdb"
 
-	d := db.Data{
+	params := db.ConnParams{
 		Username:           "user",
 		Password:           "passwd",
 		DatabaseName:       "dbname",
@@ -187,7 +187,7 @@ func ExampleNewTx() {
 	}
 
 	// get dbConn from a global variable or a local pool
-	dbConn, err := db.ConnectPostgres(d)
+	dbConn, err := db.ConnectPostgres(params)
 	if err != nil {
 		fmt.Println(err)
 		return

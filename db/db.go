@@ -30,9 +30,10 @@ var ErrNewTxTimedOut = errors.New("new transaction timed out")
 //     )
 var PostgresDriver = "postgres"
 
-// Data is all the data needed to create a new connection with database. If you are looking for
-// default values see NewData() function that set defaults values to Data structure.
-type Data struct {
+// ConnParams is all the data needed to create a new connection with database.
+// If you are looking for default values see NewConnParams() function that set
+// defaults values to Data structure.
+type ConnParams struct {
 	Username     string
 	Password     string
 	DatabaseName string
@@ -49,9 +50,10 @@ type Data struct {
 	MaxOpenConnections int
 }
 
-// NewData returns the database connection parameters with some default values.
-func NewData() Data {
-	return Data{
+// NewConnParams returns the database connection parameters with some default
+// values.
+func NewConnParams() ConnParams {
+	return ConnParams{
 		Host:               "127.0.0.1",
 		ConnectTimeout:     3 * time.Second,
 		StatementTimeout:   10 * time.Second,
@@ -63,7 +65,7 @@ func NewData() Data {
 // ConnectPostgres connects to a postgres database using the values from d. In case of a successfully
 // connection it returns a sql.DB and a nil error. In case of problem it returns a nil sql.DB and an
 // error from sql.Open (standard library, see https://golang.org/pkg/database/sql/#Open)
-func ConnectPostgres(d Data) (db *sql.DB, err error) {
+func ConnectPostgres(d ConnParams) (db *sql.DB, err error) {
 	// connect_timeout
 	//
 	// https://www.postgresql.org/docs/9.6/static/libpq-connect.html#LIBPQ-CONNECT-CONNECT-TIMEOUT
