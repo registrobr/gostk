@@ -9,6 +9,8 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/registrobr/gostk/path"
 )
 
 // pathDeep defines the number of folders that are visible when logging a
@@ -417,18 +419,18 @@ func Debugf(m string, a ...interface{}) {
 type logFunc func(string) error
 
 func logWithSourceInfo(f logFunc, prefix string, a ...interface{}) {
-	// identify the caller from 2 levels above, as this function is never called
+	// identify the caller from 3 levels above, as this function is never called
 	// directly from the place that logged the message
-	_, file, line, _ := runtime.Caller(2)
-	file = relevantPath(file, pathDeep)
+	_, file, line, _ := runtime.Caller(3)
+	file = path.RelevantPath(file, pathDeep)
 	doLog(f, prefix, fmt.Sprint(a...), file, line)
 }
 
 func logWithSourceInfof(f logFunc, prefix, message string, a ...interface{}) {
-	// identify the caller from 2 levels above, as this function is never called
+	// identify the caller from 3 levels above, as this function is never called
 	// directly from the place that logged the message
-	_, file, line, _ := runtime.Caller(2)
-	file = relevantPath(file, pathDeep)
+	_, file, line, _ := runtime.Caller(3)
+	file = path.RelevantPath(file, pathDeep)
 	doLog(f, prefix, fmt.Sprintf(message, a...), file, line)
 }
 
@@ -449,19 +451,4 @@ func doLog(f logFunc, prefix, message, file string, line int) {
 			localLogger.Println(msg)
 		}
 	}
-}
-
-func relevantPath(path string, n int) string {
-	tokens := strings.Split(path, "/")
-	total := len(tokens)
-
-	if n >= total {
-		return path
-	}
-
-	var result string
-	for i := total - n; i < total; i++ {
-		result += tokens[i] + "/"
-	}
-	return strings.TrimSuffix(result, "/")
 }
