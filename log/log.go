@@ -139,17 +139,26 @@ type Logger interface {
 	Infof(m string, a ...interface{})
 	Debug(m ...interface{})
 	Debugf(m string, a ...interface{})
+
+	// setCaller defines the number of invocations to follow-up to retrieve the
+	// actual caller of the log entry. For now is only used by the package easy
+	// functions.
+	setCaller(n int)
 }
 
 type logger struct {
 	identifier string
+	caller     int
 }
 
 // NewLogger returns a internal instance of the Logger type tagging an
 // identifier to every message logged. This identifier is useful to group many
 // messages to one related transaction id.
 var NewLogger = func(id string) Logger {
-	return logger{"[" + id + "] "}
+	return &logger{
+		identifier: "[" + id + "] ",
+		caller:     3,
+	}
 }
 
 func (l logger) Emerg(a ...interface{}) {
@@ -157,7 +166,7 @@ func (l logger) Emerg(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Emerg
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Emergf(m string, a ...interface{}) {
@@ -165,7 +174,7 @@ func (l logger) Emergf(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Emerg
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 func (l logger) Alert(a ...interface{}) {
@@ -173,7 +182,7 @@ func (l logger) Alert(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Alert
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Alertf(m string, a ...interface{}) {
@@ -181,7 +190,7 @@ func (l logger) Alertf(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Alert
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 func (l logger) Crit(a ...interface{}) {
@@ -189,7 +198,7 @@ func (l logger) Crit(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Crit
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Critf(m string, a ...interface{}) {
@@ -197,7 +206,7 @@ func (l logger) Critf(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Crit
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 // Error converts an Go error into an error message. The responsibility of
@@ -253,7 +262,7 @@ func (l logger) Errorf(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Err
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 func (l logger) Warning(a ...interface{}) {
@@ -261,7 +270,7 @@ func (l logger) Warning(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Warning
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Warningf(m string, a ...interface{}) {
@@ -269,7 +278,7 @@ func (l logger) Warningf(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Warning
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 func (l logger) Notice(a ...interface{}) {
@@ -277,7 +286,7 @@ func (l logger) Notice(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Notice
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Noticef(m string, a ...interface{}) {
@@ -285,7 +294,7 @@ func (l logger) Noticef(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Notice
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 func (l logger) Info(a ...interface{}) {
@@ -293,7 +302,7 @@ func (l logger) Info(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Info
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Infof(m string, a ...interface{}) {
@@ -301,7 +310,7 @@ func (l logger) Infof(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Info
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
 }
 
 func (l logger) Debug(a ...interface{}) {
@@ -309,7 +318,7 @@ func (l logger) Debug(a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Debug
 	}
-	logWithSourceInfo(f, l.identifier, a...)
+	l.logWithSourceInfo(f, a...)
 }
 
 func (l logger) Debugf(m string, a ...interface{}) {
@@ -317,121 +326,141 @@ func (l logger) Debugf(m string, a ...interface{}) {
 	if remoteLogger != nil {
 		f = remoteLogger.Debug
 	}
-	logWithSourceInfof(f, l.identifier, m, a...)
+	l.logWithSourceInfof(f, m, a...)
+}
+
+func (l *logger) setCaller(n int) {
+	l.caller = n
 }
 
 // Emerg log an emergency message
 func Emerg(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Emerg(a...)
 }
 
 // Emergf log an emergency message with arguments
 func Emergf(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Emergf(m, a...)
 }
 
 // Alert log an emergency message
 func Alert(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Alert(a...)
 }
 
 // Alertf log an emergency message with arguments
 func Alertf(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Alertf(m, a...)
 }
 
 // Crit log an emergency message
 func Crit(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Crit(a...)
 }
 
 // Critf log an emergency message with arguments
 func Critf(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Critf(m, a...)
 }
 
 // Error log an emergency message
 func Error(err error) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Error(err)
 }
 
 // Errorf log an emergency message with arguments
 func Errorf(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Errorf(m, a...)
 }
 
 // Warning log an emergency message
 func Warning(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Warning(a...)
 }
 
 // Warningf log an emergency message with arguments
 func Warningf(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Warningf(m, a...)
 }
 
 // Notice log an emergency message
 func Notice(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Notice(a...)
 }
 
 // Noticef log an emergency message with arguments
 func Noticef(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Noticef(m, a...)
 }
 
 // Info log an emergency message
 func Info(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Info(a...)
 }
 
 // Infof log an emergency message with arguments
 func Infof(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Infof(m, a...)
 }
 
 // Debug log an emergency message
 func Debug(a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Debug(a...)
 }
 
 // Debugf log an emergency message with arguments
 func Debugf(m string, a ...interface{}) {
 	l := NewLogger("")
+	l.setCaller(4)
 	l.Debugf(m, a...)
 }
 
 type logFunc func(string) error
 
-func logWithSourceInfo(f logFunc, prefix string, a ...interface{}) {
+func (l logger) logWithSourceInfo(f logFunc, a ...interface{}) {
 	// identify the caller from 3 levels above, as this function is never called
 	// directly from the place that logged the message
-	_, file, line, _ := runtime.Caller(3)
+	_, file, line, _ := runtime.Caller(l.caller)
 	file = path.RelevantPath(file, pathDeep)
-	doLog(f, prefix, fmt.Sprint(a...), file, line)
+	doLog(f, l.identifier, fmt.Sprint(a...), file, line)
 }
 
-func logWithSourceInfof(f logFunc, prefix, message string, a ...interface{}) {
+func (l logger) logWithSourceInfof(f logFunc, message string, a ...interface{}) {
 	// identify the caller from 3 levels above, as this function is never called
 	// directly from the place that logged the message
-	_, file, line, _ := runtime.Caller(3)
+	_, file, line, _ := runtime.Caller(l.caller)
 	file = path.RelevantPath(file, pathDeep)
-	doLog(f, prefix, fmt.Sprintf(message, a...), file, line)
+	doLog(f, l.identifier, fmt.Sprintf(message, a...), file, line)
 }
 
 func doLog(f logFunc, prefix, message, file string, line int) {
