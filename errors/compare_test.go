@@ -7,7 +7,7 @@ import (
 	"github.com/registrobr/gostk/errors"
 )
 
-func TestEqualMsg(t *testing.T) {
+func TestEqual(t *testing.T) {
 	scenarios := []struct {
 		description string
 		err1        error
@@ -75,7 +75,7 @@ func TestEqualMsg(t *testing.T) {
 	}
 
 	for i, scenario := range scenarios {
-		if errors.EqualMsg(scenario.err1, scenario.err2) != scenario.expected {
+		if errors.Equal(scenario.err1, scenario.err2) != scenario.expected {
 			t.Errorf("scenario %d, “%s”: mismatch results. Expecting: “%v”",
 				i, scenario.description, scenario.expected)
 		}

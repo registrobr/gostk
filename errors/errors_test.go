@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 	for i, scenario := range scenarios {
 		err := errors.New(scenario.err)
 
-		if !errors.EqualMsg(scenario.expectedError, err) {
+		if !errors.Equal(scenario.expectedError, err) {
 			t.Errorf("scenario %d, “%s”: mismatch results. Expecting: “%v”; found “%v”",
 				i, scenario.description, scenario.expectedError, err)
 		}

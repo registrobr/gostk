@@ -2,8 +2,8 @@
 // and log levels.
 package errors
 
-// EqualMsg compares the errors messages.
-func EqualMsg(first, second error) bool {
+// Equal compares the errors messages.
+func Equal(first, second error) bool {
 	if first == nil || second == nil {
 		return first == second
 	}
