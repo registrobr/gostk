@@ -1,5 +1,4 @@
-// Package errors implements functions to manipulate errors adding the location
-// and log levels.
+// Package errors adds location and log levels to errors.
 package errors
 
 import (
@@ -10,7 +9,7 @@ import (
 	"github.com/registrobr/gostk/path"
 )
 
-// pathDeep defines the number of folders that are visible when printing an
+// pathDeep defines the number of directories that are visible when printing an
 // error location.
 const pathDeep = 3
 

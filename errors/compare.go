@@ -1,5 +1,4 @@
-// Package errors implements functions to manipulate errors adding the location
-// and log levels.
+// Package errors adds location and log levels to errors.
 package errors
 
 // Equal compares the errors messages.
