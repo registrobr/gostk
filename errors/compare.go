@@ -1,7 +1,8 @@
 // Package errors adds location and log levels to errors.
 package errors
 
-// Equal compares the errors messages.
+// Equal compares the errors messages. This is useful in unit tests to compare
+// encapsulated error messages.
 func Equal(first, second error) bool {
 	if first == nil || second == nil {
 		return first == second
