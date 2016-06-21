@@ -13,7 +13,7 @@ import (
 	"github.com/registrobr/gostk/path"
 )
 
-// pathDeep defines the number of folders that are visible when logging a
+// pathDeep defines the number of directories that are visible when logging a
 // message with the logging location.
 const pathDeep = 3
 
