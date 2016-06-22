@@ -140,10 +140,10 @@ type Logger interface {
 	Debug(m ...interface{})
 	Debugf(m string, a ...interface{})
 
-	// setCaller defines the number of invocations to follow-up to retrieve the
+	// SetCaller defines the number of invocations to follow-up to retrieve the
 	// actual caller of the log entry. For now is only used by the package easy
 	// functions.
-	setCaller(n int)
+	SetCaller(n int)
 }
 
 type logger struct {
@@ -329,119 +329,119 @@ func (l logger) Debugf(m string, a ...interface{}) {
 	l.logWithSourceInfof(f, m, a...)
 }
 
-func (l *logger) setCaller(n int) {
+func (l *logger) SetCaller(n int) {
 	l.caller = n
 }
 
 // Emerg log an emergency message
 func Emerg(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Emerg(a...)
 }
 
 // Emergf log an emergency message with arguments
 func Emergf(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Emergf(m, a...)
 }
 
 // Alert log an emergency message
 func Alert(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Alert(a...)
 }
 
 // Alertf log an emergency message with arguments
 func Alertf(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Alertf(m, a...)
 }
 
 // Crit log an emergency message
 func Crit(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Crit(a...)
 }
 
 // Critf log an emergency message with arguments
 func Critf(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Critf(m, a...)
 }
 
 // Error log an emergency message
 func Error(err error) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Error(err)
 }
 
 // Errorf log an emergency message with arguments
 func Errorf(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Errorf(m, a...)
 }
 
 // Warning log an emergency message
 func Warning(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Warning(a...)
 }
 
 // Warningf log an emergency message with arguments
 func Warningf(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Warningf(m, a...)
 }
 
 // Notice log an emergency message
 func Notice(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Notice(a...)
 }
 
 // Noticef log an emergency message with arguments
 func Noticef(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Noticef(m, a...)
 }
 
 // Info log an emergency message
 func Info(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Info(a...)
 }
 
 // Infof log an emergency message with arguments
 func Infof(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Infof(m, a...)
 }
 
 // Debug log an emergency message
 func Debug(a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Debug(a...)
 }
 
 // Debugf log an emergency message with arguments
 func Debugf(m string, a ...interface{}) {
 	l := NewLogger("")
-	l.setCaller(4)
+	l.SetCaller(4)
 	l.Debugf(m, a...)
 }
 
