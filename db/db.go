@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -100,6 +101,10 @@ func ConnectPostgres(d ConnParams) (db *sql.DB, err error) {
 // NewTx starts a new database transaction with a timeout. Starting a new transaction is not
 // supposed to last too long, so a timeout of more than 3 seconds it's usually not necessary.
 func NewTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
+	if checker.Checking() {
+		return nil, ErrNewTxTimedOut // TODO change error type (?)
+	}
+
 	// The channels has size of 1 (buffered) to avoid keeping an unnecessary goroutine blocked in
 	// memory. For example: a goroutine is spawn, and it returns via channel a new transaction or
 	// an error. After spawning a goroutine the program blocks in the select statement waiting
@@ -127,6 +132,54 @@ func NewTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 	case err := <-chErr:
 		return nil, err
 	case <-time.After(timeout):
+		go func() {
+			checker.Check(db)
+		}()
 		return nil, ErrNewTxTimedOut
 	}
 }
+
+type dbChecker struct {
+	sync.RWMutex
+	checking bool
+}
+
+func (d *dbChecker) Checking() bool {
+	d.RLock()
+	defer d.RUnlock()
+	return d.checking
+}
+
+func (d *dbChecker) Start() {
+	d.Lock()
+	defer d.Unlock()
+	d.checking = true
+}
+
+func (d *dbChecker) Stop() {
+	d.Lock()
+	defer d.Unlock()
+	d.checking = false
+}
+
+func (d *dbChecker) Check(db *sql.DB) {
+	if d.Checking() {
+		// already checking
+		return
+	}
+
+	d.Start()
+	for range time.Tick(2 * time.Second) {
+		tx, err := db.Begin()
+		if err != nil {
+			continue
+		}
+
+		// db is back!
+		d.Stop()
+		tx.Commit()
+		return
+	}
+}
+
+var checker = new(dbChecker)
