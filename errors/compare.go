@@ -13,15 +13,15 @@ func Equal(first, second error) bool {
 
 	if ok1 {
 		if ok2 {
-			return err1.err.Error() == err2.err.Error()
+			return Equal(err1.err, err2.err)
 		}
 
-		return err1.err.Error() == second.Error()
+		return Equal(err1.err, second)
 
 	}
 
 	if ok2 {
-		return err2.err.Error() == first.Error()
+		return Equal(err2.err, first)
 	}
 
 	return first.Error() == second.Error()
