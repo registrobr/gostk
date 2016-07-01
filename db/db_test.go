@@ -58,6 +58,10 @@ func TestConnectPostgres(t *testing.T) {
 		db.PostgresDriver = originalPostgresDriver
 	}()
 
+	defer func() {
+		testdb.SetOpenFunc(nil)
+	}()
+
 	for i, scenario := range scenarios {
 		testdb.SetOpenFunc(scenario.openFunc)
 		db.PostgresDriver = scenario.postgresDriver
@@ -78,61 +82,61 @@ func TestConnectPostgres(t *testing.T) {
 func TestNewTx(t *testing.T) {
 	scenarios := []struct {
 		description   string
-		db            *sql.DB
+		db            *db.DB
 		beginFunc     func() (driver.Tx, error)
-		timeout       time.Duration
 		expectedError error
 	}{
 		{
 			description: "it should initialize a transaction correctly",
-			db: func() *sql.DB {
-				db, err := sql.Open("testdb", "")
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return db
+				return db.NewDB(d, 1*time.Second)
 			}(),
 			beginFunc: func() (driver.Tx, error) {
 				return &testdb.Tx{}, nil
 			},
-			timeout: 1 * time.Second,
 		},
 		{
 			description: "it should detect an error while initializing a transaction",
-			db: func() *sql.DB {
-				db, err := sql.Open("testdb", "")
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return db
+				return db.NewDB(d, 1*time.Second)
 			}(),
 			beginFunc: func() (driver.Tx, error) {
 				return nil, fmt.Errorf("i'm a crazy error")
 			},
-			timeout:       1 * time.Second,
 			expectedError: fmt.Errorf("i'm a crazy error"),
 		},
 		{
 			description: "it should timeout when transaction takes too long to start",
-			db: func() *sql.DB {
-				db, err := sql.Open("testdb", "")
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return db
+				return db.NewDB(d, 10*time.Millisecond)
 			}(),
 			beginFunc: func() (driver.Tx, error) {
 				time.Sleep(1 * time.Second)
 				return &testdb.Tx{}, nil
 			},
-			timeout:       10 * time.Millisecond,
 			expectedError: db.ErrNewTxTimedOut,
 		},
 	}
 
+	defer func() {
+		testdb.SetBeginFunc(nil)
+	}()
+
 	for i, scenario := range scenarios {
 		testdb.SetBeginFunc(scenario.beginFunc)
-		tx, err := db.NewTx(scenario.db, scenario.timeout)
+		tx, err := scenario.db.Begin()
 
 		if scenario.expectedError == nil && tx == nil {
 			t.Errorf("scenario %d, “%s”: tx not initialized",
@@ -166,7 +170,8 @@ func ExampleConnectPostgres() {
 		return
 	}
 
-	fmt.Println(dbConn != nil)
+	conn := db.NewDB(dbConn, 3*time.Second)
+	fmt.Println(conn != nil)
 
 	// Output:
 	// true
@@ -193,7 +198,7 @@ func ExampleNewTx() {
 		return
 	}
 
-	tx, err := db.NewTx(dbConn, 3*time.Second)
+	tx, err := db.NewDB(dbConn, 3*time.Second).Begin()
 	if err != nil {
 		fmt.Println(err)
 		return
