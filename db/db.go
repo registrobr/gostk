@@ -188,10 +188,16 @@ func (d *dbChecker) unreachable() bool {
 	return d.checking
 }
 
-func (d *dbChecker) start() {
+func (d *dbChecker) start() bool {
 	d.Lock()
 	defer d.Unlock()
+
+	if d.checking {
+		return false
+	}
+
 	d.checking = true
+	return true
 }
 
 func (d *dbChecker) stop() {
@@ -201,12 +207,11 @@ func (d *dbChecker) stop() {
 }
 
 func (d *dbChecker) check(db *sql.DB, duration time.Duration) {
-	if d.unreachable() {
+	if !d.start() {
 		// already checking
 		return
 	}
 
-	d.start()
 	for range time.Tick(2 * time.Second) {
 		tx, err := newTx(db, duration)
 		if err != nil {
