@@ -58,6 +58,10 @@ func TestConnectPostgres(t *testing.T) {
 		db.PostgresDriver = originalPostgresDriver
 	}()
 
+	defer func() {
+		testdb.SetOpenFunc(nil)
+	}()
+
 	for i, scenario := range scenarios {
 		testdb.SetOpenFunc(scenario.openFunc)
 		db.PostgresDriver = scenario.postgresDriver
@@ -75,64 +79,149 @@ func TestConnectPostgres(t *testing.T) {
 	}
 }
 
-func TestNewTx(t *testing.T) {
+func TestDB_Begin(t *testing.T) {
 	scenarios := []struct {
 		description   string
-		db            *sql.DB
+		db            *db.DB
 		beginFunc     func() (driver.Tx, error)
-		timeout       time.Duration
+		rerun         int
+		rerunDelay    time.Duration
+		afterDelay    time.Duration
 		expectedError error
 	}{
 		{
 			description: "it should initialize a transaction correctly",
-			db: func() *sql.DB {
-				db, err := sql.Open("testdb", "")
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return db
+				return db.NewDB(d, 1*time.Second)
 			}(),
 			beginFunc: func() (driver.Tx, error) {
 				return &testdb.Tx{}, nil
 			},
-			timeout: 1 * time.Second,
 		},
 		{
 			description: "it should detect an error while initializing a transaction",
-			db: func() *sql.DB {
-				db, err := sql.Open("testdb", "")
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return db
+				return db.NewDB(d, 1*time.Second)
 			}(),
 			beginFunc: func() (driver.Tx, error) {
 				return nil, fmt.Errorf("i'm a crazy error")
 			},
-			timeout:       1 * time.Second,
 			expectedError: fmt.Errorf("i'm a crazy error"),
 		},
 		{
 			description: "it should timeout when transaction takes too long to start",
-			db: func() *sql.DB {
-				db, err := sql.Open("testdb", "")
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
 				if err != nil {
 					t.Fatal(err)
 				}
-				return db
+				return db.NewDB(d, 10*time.Millisecond)
 			}(),
 			beginFunc: func() (driver.Tx, error) {
 				time.Sleep(1 * time.Second)
 				return &testdb.Tx{}, nil
 			},
-			timeout:       10 * time.Millisecond,
 			expectedError: db.ErrNewTxTimedOut,
+		},
+		{
+			description: "it should fail fast when the database is unreachable",
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				return db.NewDB(d, 10*time.Millisecond)
+			}(),
+			beginFunc: func() func() (driver.Tx, error) {
+				i := 0
+				return func() (driver.Tx, error) {
+					i++
+					if i <= 2 {
+						// force timeout
+						time.Sleep(1 * time.Second)
+					}
+					return &testdb.Tx{}, nil
+				}
+			}(),
+			rerun:         1,
+			rerunDelay:    10 * time.Millisecond,
+			expectedError: db.ErrUnreachable,
+		},
+		{
+			description: "it should restore from a database unreachable problem",
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				return db.NewDB(d, 10*time.Millisecond)
+			}(),
+			beginFunc: func() func() (driver.Tx, error) {
+				i := 0
+				return func() (driver.Tx, error) {
+					i++
+					if i <= 2 {
+						// force timeout
+						time.Sleep(1 * time.Second)
+					}
+					return &testdb.Tx{}, nil
+				}
+			}(),
+			rerun:      41,
+			rerunDelay: 100 * time.Millisecond,
+		},
+		{
+			// this test is only made to try getting some panic in a concurrent
+			// scenario and to achieve 100% test coverage. =)
+			description: "it should avoid running 2 checkers at once",
+			db: func() *db.DB {
+				d, err := sql.Open("testdb", "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				return db.NewDB(d, 10*time.Millisecond)
+			}(),
+			beginFunc: func() func() (driver.Tx, error) {
+				i := 0
+				return func() (driver.Tx, error) {
+					i++
+					if i <= 2 {
+						// force timeout
+						time.Sleep(1 * time.Second)
+					}
+					return &testdb.Tx{}, nil
+				}
+			}(),
+			rerun:         2,
+			afterDelay:    20 * time.Millisecond,
+			expectedError: db.ErrUnreachable,
 		},
 	}
 
+	defer func() {
+		testdb.SetBeginFunc(nil)
+	}()
+
 	for i, scenario := range scenarios {
 		testdb.SetBeginFunc(scenario.beginFunc)
-		tx, err := db.NewTx(scenario.db, scenario.timeout)
+
+		tx, err := scenario.db.Begin()
+		for j := 0; j < scenario.rerun; j++ {
+			time.Sleep(scenario.rerunDelay)
+			tx, err = scenario.db.Begin()
+		}
+
+		// in some scenarios we want to wait before finishing the test so the go
+		// routines can run at least one time.
+		time.Sleep(scenario.afterDelay)
 
 		if scenario.expectedError == nil && tx == nil {
 			t.Errorf("scenario %d, “%s”: tx not initialized",
@@ -143,6 +232,43 @@ func TestNewTx(t *testing.T) {
 			t.Errorf("scenario %d, “%s”: mismatch errors. Expecting: “%v”; found “%v”",
 				i, scenario.description, scenario.expectedError, err)
 		}
+	}
+}
+
+func TestUnreachable(t *testing.T) {
+	rawDB, err := sql.Open("testdb", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := db.NewDB(rawDB, 10*time.Millisecond)
+
+	defer func() {
+		testdb.SetBeginFunc(nil)
+	}()
+
+	i := 0
+	testdb.SetBeginFunc(func() (driver.Tx, error) {
+		i++
+		if i <= 1 {
+			time.Sleep(1 * time.Second)
+		}
+		return &testdb.Tx{}, nil
+	})
+
+	if _, err := d.Begin(); err == nil {
+		t.Errorf("timeout not detected")
+	}
+
+	// wait a bit for the dbChecker to start
+	time.Sleep(10 * time.Millisecond)
+	if db.Unreachable(d) {
+		fmt.Errorf("should be unreachable")
+	}
+
+	// wait for the dbChecker to run again
+	time.Sleep(2 * time.Second)
+	if !db.Unreachable(d) {
+		fmt.Errorf("should be reachable")
 	}
 }
 
@@ -166,7 +292,8 @@ func ExampleConnectPostgres() {
 		return
 	}
 
-	fmt.Println(dbConn != nil)
+	conn := db.NewDB(dbConn, 3*time.Second)
+	fmt.Println(conn != nil)
 
 	// Output:
 	// true
@@ -193,7 +320,7 @@ func ExampleNewTx() {
 		return
 	}
 
-	tx, err := db.NewTx(dbConn, 3*time.Second)
+	tx, err := db.NewDB(dbConn, 3*time.Second).Begin()
 	if err != nil {
 		fmt.Println(err)
 		return

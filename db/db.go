@@ -14,11 +14,18 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
-// ErrNewTxTimedOut returned when takes too long to retrieve a transaction from the database server.
-var ErrNewTxTimedOut = errors.New("new transaction timed out")
+var (
+	// ErrNewTxTimedOut returned when takes too long to retrieve a transaction
+	// from the database server.
+	ErrNewTxTimedOut = errors.New("new transaction timed out")
+
+	// ErrUnreachable returned when the database is current unreachable.
+	ErrUnreachable = errors.New("unreachable database")
+)
 
 // PostgresDriver holds the postgres driver name. You should import the driver somewhere in your
 // code. The default value for PostgresDriver was get from https://github.com/lib/pq. This driver
@@ -97,9 +104,42 @@ func ConnectPostgres(d ConnParams) (db *sql.DB, err error) {
 	return
 }
 
-// NewTx starts a new database transaction with a timeout. Starting a new transaction is not
-// supposed to last too long, so a timeout of more than 3 seconds it's usually not necessary.
-func NewTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
+// DB is a layer over the sql.DB to allow fail-fast approach when a database is
+// unreachable and to allow carrying the transaction timeout.
+type DB struct {
+	*sql.DB
+	checker   dbChecker
+	txTimeout time.Duration
+}
+
+// NewDB build a DB layer over the sql.DB to add transaction timeout feature
+// with fail-fast capability.
+func NewDB(db *sql.DB, txTimeout time.Duration) *DB {
+	return &DB{
+		DB:        db,
+		txTimeout: txTimeout,
+	}
+}
+
+// Begin starts a new database transaction with a timeout. Starting a new
+// transaction is not supposed to last too long, so a timeout of more than 3
+// seconds it's usually not necessary.
+func (db *DB) Begin() (*sql.Tx, error) {
+	if db.checker.unreachable() {
+		return nil, ErrUnreachable
+	}
+
+	tx, err := newTx(db.DB, db.txTimeout)
+	if err == ErrNewTxTimedOut {
+		go func() {
+			db.checker.check(db.DB, db.txTimeout)
+		}()
+	}
+
+	return tx, err
+}
+
+func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 	// The channels has size of 1 (buffered) to avoid keeping an unnecessary goroutine blocked in
 	// memory. For example: a goroutine is spawn, and it returns via channel a new transaction or
 	// an error. After spawning a goroutine the program blocks in the select statement waiting
@@ -128,5 +168,59 @@ func NewTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 		return nil, err
 	case <-time.After(timeout):
 		return nil, ErrNewTxTimedOut
+	}
+}
+
+// Unreachable fast way to check if a database connection is unreachable without
+// creating a new transaction.
+func Unreachable(db *DB) bool {
+	return db.checker.unreachable()
+}
+
+type dbChecker struct {
+	sync.RWMutex
+	checking bool
+}
+
+func (d *dbChecker) unreachable() bool {
+	d.RLock()
+	defer d.RUnlock()
+	return d.checking
+}
+
+func (d *dbChecker) start() bool {
+	d.Lock()
+	defer d.Unlock()
+
+	if d.checking {
+		return false
+	}
+
+	d.checking = true
+	return true
+}
+
+func (d *dbChecker) stop() {
+	d.Lock()
+	defer d.Unlock()
+	d.checking = false
+}
+
+func (d *dbChecker) check(db *sql.DB, duration time.Duration) {
+	if !d.start() {
+		// already checking
+		return
+	}
+
+	for range time.Tick(2 * time.Second) {
+		tx, err := newTx(db, duration)
+		if err != nil {
+			continue
+		}
+
+		// db is back!
+		d.stop()
+		tx.Commit()
+		return
 	}
 }
