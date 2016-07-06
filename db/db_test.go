@@ -256,19 +256,23 @@ func TestUnreachable(t *testing.T) {
 	})
 
 	if _, err := d.Begin(); err == nil {
-		t.Errorf("timeout not detected")
+		t.Error("timeout not detected")
 	}
 
 	// wait a bit for the dbChecker to start
 	time.Sleep(10 * time.Millisecond)
-	if db.Unreachable(d) {
-		fmt.Errorf("should be unreachable")
+	if !db.Unreachable(d) {
+		t.Error("should be unreachable")
 	}
 
 	// wait for the dbChecker to run again
-	time.Sleep(2 * time.Second)
-	if !db.Unreachable(d) {
-		fmt.Errorf("should be reachable")
+	time.Sleep(4 * time.Second)
+	if db.Unreachable(d) {
+		t.Error("should be reachable")
+	}
+
+	if db.Unreachable(nil) {
+		t.Error("not detecting nil DB")
 	}
 }
 

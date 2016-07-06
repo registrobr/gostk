@@ -174,6 +174,9 @@ func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 // Unreachable fast way to check if a database connection is unreachable without
 // creating a new transaction.
 func Unreachable(db *DB) bool {
+	if db == nil {
+		return false
+	}
 	return db.checker.unreachable()
 }
 
