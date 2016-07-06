@@ -32,6 +32,18 @@ func New(err error) error {
 	return traceableError{err: err, file: file, line: line, level: log.LevelError}
 }
 
+// NewWithFollowUp works exactly as New but defines the number of invocations to
+// follow-up to retrieve the actual caller of the error. Useful when the user
+// adds an extra layer over the current Error type.
+func NewWithFollowUp(err error, followUp int) error {
+	if err == nil {
+		return nil
+	}
+
+	_, file, line, _ := runtime.Caller(followUp)
+	return traceableError{err: err, file: file, line: line, level: log.LevelError}
+}
+
 // Error string representation of the error adding the location.
 func (e traceableError) Error() string {
 	format := "%s:%d: %s"

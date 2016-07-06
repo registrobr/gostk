@@ -35,6 +35,39 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestNewWithFollowUp(t *testing.T) {
+	scenarios := []struct {
+		description   string
+		err           error
+		followUp      int
+		expectedError error
+	}{
+		{
+			description:   "it should encapsulate another error correctly",
+			err:           fmt.Errorf("this is a test"),
+			followUp:      2,
+			expectedError: errors.Errorf("this is a test"),
+		},
+		{
+			description: "it should ignore a nil error",
+			followUp:    2,
+		},
+	}
+
+	for i, scenario := range scenarios {
+		extraLayer := func(err error) error {
+			return errors.NewWithFollowUp(err, scenario.followUp)
+		}
+
+		err := extraLayer(scenario.err)
+
+		if !errors.Equal(scenario.expectedError, err) {
+			t.Errorf("scenario %d, “%s”: mismatch results. Expecting: “%v”; found “%v”",
+				i, scenario.description, scenario.expectedError, err)
+		}
+	}
+}
+
 func TestTraceableError_Error(t *testing.T) {
 	scenarios := []struct {
 		description string
