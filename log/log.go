@@ -90,12 +90,16 @@ type syslogWriter interface {
 }
 
 var (
+	// remoteLogger connection with a remote syslog server.
 	remoteLogger syslogWriter
-	localLogger  *log.Logger
+
+	// LocalLogger is the fallback log used when the remote logger isn't
+	// available.
+	LocalLogger *log.Logger
 )
 
 func init() {
-	localLogger = log.New(os.Stderr, "", log.LstdFlags)
+	LocalLogger = log.New(os.Stderr, "", log.LstdFlags)
 }
 
 // Dial establishes a connection to a log daemon by connecting to
@@ -219,7 +223,7 @@ func (l logger) Error(e error) {
 
 	msg := l.identifier + e.Error()
 	if remoteLogger == nil {
-		localLogger.Println(msg)
+		LocalLogger.Println(msg)
 		return
 	}
 
@@ -252,8 +256,8 @@ func (l logger) Error(e error) {
 	}
 
 	if err != nil {
-		localLogger.Println("Error writing to syslog. Details:", err)
-		localLogger.Println(msg)
+		LocalLogger.Println("Error writing to syslog. Details:", err)
+		LocalLogger.Println(msg)
 	}
 }
 
@@ -473,11 +477,11 @@ func doLog(f logFunc, prefix, message, file string, line int) {
 		msg := fmt.Sprintf("%s%s:%d: %s", prefix, file, line, item)
 
 		if f == nil {
-			localLogger.Println(msg)
+			LocalLogger.Println(msg)
 
 		} else if err := f(msg); err != nil {
-			localLogger.Println("Error writing to syslog. Details:", err)
-			localLogger.Println(msg)
+			LocalLogger.Println("Error writing to syslog. Details:", err)
+			LocalLogger.Println(msg)
 		}
 	}
 }

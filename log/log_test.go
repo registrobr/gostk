@@ -156,7 +156,7 @@ func TestLogger_Emerg(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -234,7 +234,7 @@ func TestLogger_Emergf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -309,7 +309,7 @@ func TestLogger_Alert(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -387,7 +387,7 @@ func TestLogger_Alertf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -462,7 +462,7 @@ func TestLogger_Crit(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -540,7 +540,7 @@ func TestLogger_Critf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -818,7 +818,7 @@ func TestLogger_Error(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -896,7 +896,7 @@ func TestLogger_Errorf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -971,7 +971,7 @@ func TestLogger_Warning(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1049,7 +1049,7 @@ func TestLogger_Warningf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1124,7 +1124,7 @@ func TestLogger_Notice(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1202,7 +1202,7 @@ func TestLogger_Noticef(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1277,7 +1277,7 @@ func TestLogger_Info(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1355,7 +1355,7 @@ func TestLogger_Infof(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1430,7 +1430,7 @@ func TestLogger_Debug(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1508,7 +1508,7 @@ func TestLogger_Debugf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1574,7 +1574,7 @@ func TestEmerg(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1642,7 +1642,7 @@ func TestEmergf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1707,7 +1707,7 @@ func TestAlert(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1775,7 +1775,7 @@ func TestAlertf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1840,7 +1840,7 @@ func TestCrit(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -1908,7 +1908,7 @@ func TestCritf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2123,7 +2123,7 @@ func TestError(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2191,7 +2191,7 @@ func TestErrorf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2256,7 +2256,7 @@ func TestWarning(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2324,7 +2324,7 @@ func TestWarningf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2389,7 +2389,7 @@ func TestNotice(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2457,7 +2457,7 @@ func TestNoticef(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2522,7 +2522,7 @@ func TestInfo(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2590,7 +2590,7 @@ func TestInfof(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2655,7 +2655,7 @@ func TestDebug(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
@@ -2723,7 +2723,7 @@ func TestDebugf(t *testing.T) {
 	}()
 
 	var localBuffer bytes.Buffer
-	localLogger = log.New(&localBuffer, "", log.Lshortfile)
+	LocalLogger = log.New(&localBuffer, "", log.Lshortfile)
 
 	for i, scenario := range scenarios {
 		localBuffer.Reset()
