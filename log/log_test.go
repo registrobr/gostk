@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDial(t *testing.T) {
@@ -28,6 +29,7 @@ func TestDial(t *testing.T) {
 		network       string
 		raddr         string
 		tag           string
+		timeout       time.Duration
 		expectedError error
 	}{
 		{
@@ -35,18 +37,28 @@ func TestDial(t *testing.T) {
 			network:     "tcp",
 			raddr:       l.Addr().String(),
 			tag:         "test",
+			timeout:     time.Second,
 		},
 		{
 			description:   "it should detect an error connecting to the remote syslog server",
 			network:       "tcp",
 			raddr:         "localhost:0",
 			tag:           "test",
+			timeout:       time.Second,
 			expectedError: fmt.Errorf("dial tcp 127.0.0.1:0: getsockopt: connection refused"),
+		},
+		{
+			description:   "it should timeout when connecting to the syslog server",
+			network:       "tcp",
+			raddr:         "192.0.2.1:1234",
+			tag:           "test",
+			timeout:       time.Millisecond,
+			expectedError: ErrDialTimeout,
 		},
 	}
 
 	for i, scenario := range scenarios {
-		err := Dial(scenario.network, scenario.raddr, scenario.tag)
+		err := Dial(scenario.network, scenario.raddr, scenario.tag, scenario.timeout)
 
 		if ((err == nil || scenario.expectedError == nil) && err != scenario.expectedError) ||
 			(err != nil && scenario.expectedError != nil && err.Error() != scenario.expectedError.Error()) {

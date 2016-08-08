@@ -3,12 +3,14 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"log/syslog"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/registrobr/gostk/path"
 )
@@ -50,6 +52,12 @@ const (
 	// LevelDebug sets a very low priority level indicating information useful to
 	// developers for debugging the application.
 	LevelDebug Level = 7
+)
+
+var (
+	// ErrDialTimeout returned when a syslog dial connection takes too long to be
+	// established.
+	ErrDialTimeout = errors.New("dial timeout")
 )
 
 // Level defines the severity of an error. For example, if a custom error is
@@ -105,10 +113,39 @@ func init() {
 // Dial establishes a connection to a log daemon by connecting to
 // address raddr on the specified network.  Each write to the returned
 // writer sends a log message with the given facility, severity and
-// tag. If network is empty, Dial will connect to the local syslog server.
-func Dial(network, raddr, tag string) (err error) {
-	remoteLogger, err = syslog.Dial(network, raddr, syslog.LOG_INFO|syslog.LOG_LOCAL0, tag)
-	return
+// tag. If network is empty, Dial will connect to the local syslog server. A
+// connection timeout defines how long it will wait for the connection until a
+// timeout error is raised.
+func Dial(network, raddr, tag string, timeout time.Duration) error {
+	// The channels has size of 1 (buffered) to avoid keeping an unnecessary goroutine blocked in
+	// memory. For example: a goroutine is spawn, and it returns via channel a new transaction or
+	// an error. After spawning a goroutine the program blocks in the select statement waiting
+	// until the first channel message. In case of a timeout message, the spawned goroutine will
+	// put a message in one of this two channels (ch and chErr) and simply returns (die), the
+	// program don't care about the messages, because it has already timed out. If the channels
+	// were not buffered the goroutine would be blocked trying to put a message into the channel
+	// until the program dies.
+	ch := make(chan *syslog.Writer, 1)
+	chErr := make(chan error, 1)
+
+	go func() {
+		w, err := syslog.Dial(network, raddr, syslog.LOG_INFO|syslog.LOG_LOCAL0, tag)
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		ch <- w
+	}()
+
+	select {
+	case remoteLogger = <-ch:
+		return nil
+	case err := <-chErr:
+		return err
+	case <-time.After(timeout):
+		return ErrDialTimeout
+	}
 }
 
 // Close closes a connection to the syslog daemon.
