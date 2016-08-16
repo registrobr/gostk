@@ -148,8 +148,9 @@ func Dial(network, raddr, tag string, timeout time.Duration) error {
 	}
 }
 
-// Close closes a connection to the syslog daemon.
-func Close() error {
+// Close closes a connection to the syslog daemon. It is declared as a variable
+// to allow an easy mocking.
+var Close = func() error {
 	if remoteLogger == nil {
 		return nil
 	}
