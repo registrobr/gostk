@@ -45,6 +45,7 @@ type ConnParams struct {
 	Password     string
 	DatabaseName string
 	Host         string
+	Port         int
 
 	// ConnectTimeout is the timeout utilized to creating a new connection with database. It is not
 	// recommended to use a timeout of less than 2 seconds.
@@ -86,11 +87,12 @@ func ConnectPostgres(d ConnParams) (db *sql.DB, err error) {
 	// Abort any statement that takes more than the specified number of milliseconds, starting from
 	// the time the command arrives at the server from the client.
 	connParams := fmt.Sprintf(
-		"user=%s password=%s dbname=%s sslmode=disable host=%s connect_timeout=%d statement_timeout=%d",
+		"user=%s password=%s dbname=%s sslmode=disable host=%s port=%d connect_timeout=%d statement_timeout=%d",
 		d.Username,
 		d.Password,
 		d.DatabaseName,
 		d.Host,
+		d.Port,
 		int(d.ConnectTimeout.Seconds()),
 		int(d.StatementTimeout.Seconds()*1000),
 	)
