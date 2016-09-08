@@ -153,6 +153,7 @@ func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 	ch := make(chan *sql.Tx, 1)
 	chErr := make(chan error, 1)
 
+	cancel := false
 	go func() {
 		tx, err := db.Begin()
 		if err != nil {
@@ -161,6 +162,9 @@ func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 		}
 
 		ch <- tx
+		if cancel {
+			tx.Commit()
+		}
 	}()
 
 	select {
@@ -169,6 +173,7 @@ func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 	case err := <-chErr:
 		return nil, err
 	case <-time.After(timeout):
+		cancel = true
 		return nil, ErrNewTxTimedOut
 	}
 }
