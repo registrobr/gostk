@@ -152,8 +152,8 @@ func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 	// until the program dies.
 	ch := make(chan *sql.Tx, 1)
 	chErr := make(chan error, 1)
+	chCancel := make(chan bool, 1)
 
-	cancel := false
 	go func() {
 		tx, err := db.Begin()
 		if err != nil {
@@ -162,18 +162,23 @@ func newTx(db *sql.DB, timeout time.Duration) (*sql.Tx, error) {
 		}
 
 		ch <- tx
-		if cancel {
+
+		if c, ok := <-chCancel; ok && c {
+			// commit the transaction to release the resource, because the timeout was
+			// reached before the transaction was created.
 			tx.Commit()
 		}
 	}()
 
 	select {
 	case tx := <-ch:
+		chCancel <- false
 		return tx, nil
 	case err := <-chErr:
+		close(chCancel)
 		return nil, err
 	case <-time.After(timeout):
-		cancel = true
+		chCancel <- true
 		return nil, ErrNewTxTimedOut
 	}
 }
