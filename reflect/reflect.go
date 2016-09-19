@@ -10,16 +10,19 @@ func IsDefined(value interface{}) bool {
 		return false
 	}
 
-	v := reflect.ValueOf(value)
-	switch v.Kind() {
+	return isDefined(reflect.ValueOf(value))
+}
+
+func isDefined(value reflect.Value) bool {
+	switch value.Kind() {
 	case reflect.Ptr, reflect.Interface:
-		if canIsNil(v.Elem()) {
-			v = v.Elem()
+		if canIsNil(value.Elem()) {
+			return isDefined(value.Elem())
 		}
 	}
 
-	if canIsNil(v) {
-		return !v.IsNil()
+	if canIsNil(value) {
+		return !value.IsNil()
 	}
 
 	return true
