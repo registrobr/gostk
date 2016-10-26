@@ -74,6 +74,10 @@ func NewConnParams() ConnParams {
 // connection it returns a sql.DB and a nil error. In case of problem it returns a nil sql.DB and an
 // error from sql.Open (standard library, see https://golang.org/pkg/database/sql/#Open)
 func ConnectPostgres(d ConnParams) (db *sql.DB, err error) {
+	if d.Port == 0 {
+		d.Port = 5432
+	}
+
 	// connect_timeout
 	//
 	// https://www.postgresql.org/docs/9.6/static/libpq-connect.html#LIBPQ-CONNECT-CONNECT-TIMEOUT
