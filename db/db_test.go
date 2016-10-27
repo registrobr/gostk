@@ -31,7 +31,7 @@ func TestConnectPostgres(t *testing.T) {
 			}(),
 			postgresDriver: "testdb",
 			openFunc: func(dsn string) (driver.Conn, error) {
-				connParams := "user=user password=passwd dbname=test sslmode=disable host=127.0.0.1 connect_timeout=3 statement_timeout=10000"
+				connParams := "user=user password=passwd dbname=test sslmode=disable host=127.0.0.1 port=5432 connect_timeout=3 statement_timeout=10000"
 				if dsn != connParams {
 					return nil, fmt.Errorf("invalid connection string")
 				}
@@ -51,6 +51,27 @@ func TestConnectPostgres(t *testing.T) {
 			postgresDriver: "idontexist",
 			expectedError:  fmt.Errorf(`sql: unknown driver "idontexist" (forgotten import?)`),
 		},
+		{
+			description: "check if it is setting default postgres port 5432",
+			connParams: func() db.ConnParams {
+				d := db.NewConnParams()
+				d.DatabaseName = "test"
+				d.Username = "user"
+				d.Password = "passwd"
+				d.Host = "127.0.0.1"
+				d.Port = 0
+				return d
+			}(),
+			postgresDriver: "testdb",
+			openFunc: func(dsn string) (driver.Conn, error) {
+				connParams := "user=user password=passwd dbname=test sslmode=disable host=127.0.0.1 port=5432 connect_timeout=3 statement_timeout=10000"
+				if dsn != connParams {
+					return nil, fmt.Errorf("invalid connection string")
+				}
+
+				return testdb.Conn(), nil
+			},
+		},
 	}
 
 	originalPostgresDriver := db.PostgresDriver
@@ -66,6 +87,11 @@ func TestConnectPostgres(t *testing.T) {
 		testdb.SetOpenFunc(scenario.openFunc)
 		db.PostgresDriver = scenario.postgresDriver
 		db, err := db.ConnectPostgres(scenario.connParams)
+
+		// call Begin to force database/sql call our scenario.openFunc
+		if err == nil {
+			_, err = db.Begin()
+		}
 
 		if scenario.expectedError == nil && db == nil {
 			t.Errorf("scenario %d, “%s”: database not initialized",
